@@ -628,6 +628,7 @@ func (i *Inbox) NewConversation(ctx context.Context, vers chat1.InboxVers, conv 
 					i.Debug(ctx, "NewConversation: setting supersededBy: target: %s superseder: %s",
 						iconv.GetConvID(), conv.GetConvID())
 					iconv.Metadata.SupersededBy = append(iconv.Metadata.SupersededBy, conv.Metadata)
+					iconv.Metadata.Version = vers.ToConvVers()
 				}
 			}
 		}
@@ -751,6 +752,7 @@ func (i *Inbox) NewMessage(ctx context.Context, vers chat1.InboxVers, convID cha
 	if utils.GetConversationStatusBehavior(conv.Metadata.Status).ActivityRemovesStatus {
 		conv.Metadata.Status = chat1.ConversationStatus_UNFILED
 	}
+	conv.Metadata.Version = vers.ToConvVers()
 
 	// Slot in at the top
 	mconv := *conv
@@ -804,6 +806,7 @@ func (i *Inbox) ReadMessage(ctx context.Context, vers chat1.InboxVers, convID ch
 		conv.ReaderInfo.Mtime = gregor1.ToTime(time.Now())
 		conv.ReaderInfo.ReadMsgid = msgID
 	}
+	conv.Metadata.Version = vers.ToConvVers()
 
 	// Write out to disk
 	ibox.InboxVersion = vers
@@ -845,6 +848,7 @@ func (i *Inbox) SetStatus(ctx context.Context, vers chat1.InboxVers, convID chat
 
 	conv.ReaderInfo.Mtime = gregor1.ToTime(time.Now())
 	conv.Metadata.Status = status
+	conv.Metadata.Version = vers.ToConvVers()
 
 	// Write out to disk
 	ibox.InboxVersion = vers
@@ -888,6 +892,7 @@ func (i *Inbox) SetAppNotificationSettings(ctx context.Context, vers chat1.Inbox
 		}
 	}
 	conv.Notifications.ChannelWide = settings.ChannelWide
+	conv.Metadata.Version = vers.ToConvVers()
 
 	// Write out to disk
 	ibox.InboxVersion = vers
@@ -926,6 +931,7 @@ func (i *Inbox) TeamTypeChanged(ctx context.Context, vers chat1.InboxVers,
 		return i.Clear(ctx)
 	}
 	conv.Metadata.TeamType = teamType
+	conv.Metadata.Version = vers.ToConvVers()
 
 	// Write out to disk
 	ibox.InboxVersion = vers
@@ -967,6 +973,7 @@ func (i *Inbox) TlfFinalize(ctx context.Context, vers chat1.InboxVers, convIDs [
 		}
 
 		conv.Metadata.FinalizeInfo = &finalizeInfo
+		conv.Metadata.Version = vers.ToConvVers()
 	}
 
 	// Write out to disk
@@ -1089,6 +1096,7 @@ func (i *Inbox) MembershipUpdate(ctx context.Context, vers chat1.InboxVers,
 	for _, conv := range convs {
 		if removedMap[conv.GetConvID().String()] {
 			conv.ReaderInfo.Status = chat1.ConversationMemberStatus_LEFT
+			conv.Metadata.Version = vers.ToConvVers()
 		}
 		ibox.Conversations = append(ibox.Conversations, conv)
 	}
@@ -1102,6 +1110,7 @@ func (i *Inbox) MembershipUpdate(ctx context.Context, vers chat1.InboxVers,
 	for _, oj := range othersJoined {
 		if cp, ok := convMap[oj.ConvID.String()]; ok {
 			cp.Metadata.AllList = append(cp.Metadata.AllList, oj.Uid)
+			cp.Metadata.Version = vers.ToConvVers()
 		}
 	}
 	for _, or := range othersRemoved {
@@ -1113,6 +1122,7 @@ func (i *Inbox) MembershipUpdate(ctx context.Context, vers chat1.InboxVers,
 				}
 			}
 			cp.Metadata.AllList = newAllList
+			cp.Metadata.Version = vers.ToConvVers()
 		}
 	}
 
