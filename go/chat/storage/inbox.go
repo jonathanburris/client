@@ -479,12 +479,16 @@ func (i *Inbox) queryConvIDsExist(ctx context.Context, ibox inboxDiskData,
 	return true
 }
 
+func (i *Inbox) convIDQuery(ctx context.Context, query *chat1.GetInboxQuery) bool {
+	return query != nil && (len(query.ConvIDs) > 0 || query.ConvID != nil)
+}
+
 func (i *Inbox) queryExists(ctx context.Context, ibox inboxDiskData, query *chat1.GetInboxQuery,
 	p *chat1.Pagination) bool {
 
 	// If the query is specifying a list of conversation IDs, just check to see if we have *all*
 	// of them on the disk
-	if query != nil && (len(query.ConvIDs) > 0 || query.ConvID != nil) {
+	if i.convIDQuery(ctx, query) {
 		i.Debug(ctx, "Read: queryExists: convIDs query, checking list: len: %d", len(query.ConvIDs))
 		return i.queryConvIDsExist(ctx, ibox, query.ConvIDs)
 	}
